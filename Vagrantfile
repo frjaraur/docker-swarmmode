@@ -79,6 +79,10 @@ Vagrant.configure(2) do |config|
       # SHELL
 
 
+      config.vm.provision "shell", inline: <<-SHELL
+        sudo apt-get update -qq && apt-get install -qq chrony && timedatectl set-timezone Europe/Madrid
+      SHELL
+
       # Delete default router for host-only-adapter
     #  config.vm.provision "shell",
     #    run: "always",

@@ -47,3 +47,7 @@ docker service create --name app \
 --restart-condition on-failure \
 --with-registry-auth \
 frjaraur/simplest-demo:simplestapp
+
+#docker service create --name cserver \
+#--network demo \
+#frjaraur/docker-collectd server
