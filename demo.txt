@@ -1,5 +1,6 @@
 docker network create -d overlay demo
 
+docker login
 
 docker service create --name dbmaster \
 --network demo \
