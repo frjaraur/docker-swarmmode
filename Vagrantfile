@@ -107,6 +107,8 @@ Vagrant.configure(2) do |config|
       config.vm.provision "file", source: "create_swarm.sh", destination: "/home/vagrant/create_swarm.sh"
       config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ opts[:node_mgmt_ip], opts[:swarm_role], swarm_master_ip ]
 
+      config.vm.provision "file", source: "install_compose.sh", destination: "/home/vagrant/install_compose.sh"
+      config.vm.provision :shell, :path => 'install_compose.sh' 
     end
   end
 
