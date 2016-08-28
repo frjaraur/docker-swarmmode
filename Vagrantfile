@@ -1,6 +1,6 @@
 boxes = [
     {
-        :node_mgmt_name => "node1",
+        :node_mgmt_name => "swarmnode1",
         :node_mgmt_ip => "10.10.10.11",
         :swarm_role => "manager",
         :node_mem => "1524",
@@ -9,7 +9,7 @@ boxes = [
         :node_hostonlyip=> "192.168.56.11"
     },
     {
-        :node_mgmt_name => "node2",
+        :node_mgmt_name => "swarmnode2",
         :node_mgmt_ip => "10.10.10.12",
         :swarm_role => "manager",
         :node_mem => "1524",
@@ -18,7 +18,7 @@ boxes = [
         :node_hostonlyip=> "192.168.56.12"
     },
     {
-        :node_mgmt_name => "node3",
+        :node_mgmt_name => "swarmnode3",
         :node_mgmt_ip => "10.10.10.13",
         :swarm_role => "manager",
         :node_mem => "1524",
@@ -27,7 +27,7 @@ boxes = [
         :node_hostonlyip=> "192.168.56.13"
     },
     {
-        :node_mgmt_name => "node4",
+        :node_mgmt_name => "swarmnode4",
         :node_mgmt_ip => "10.10.10.14",
         :swarm_role => "worker",
         :node_mem => "1524",
@@ -97,10 +97,10 @@ Vagrant.configure(2) do |config|
       ## ADD HOSTS
       config.vm.provision "shell", inline: <<-SHELL
         echo "127.0.0.1 localhost" >/etc/hosts
-        echo "10.10.10.11 node1 node1.dockerlab.local" >>/etc/hosts
-        echo "10.10.10.12 node2 node2.dockerlab.local" >>/etc/hosts
-        echo "10.10.10.13 node3 node3.dockerlab.local" >>/etc/hosts
-        echo "10.10.10.14 node4 node4.dockerlab.local" >>/etc/hosts
+        echo "10.10.10.11 swarmnode1 swarmnode1.dockerlab.local" >>/etc/hosts
+        echo "10.10.10.12 swarmnode2 swarmnode2.dockerlab.local" >>/etc/hosts
+        echo "10.10.10.13 swarmnode3 swarmnode3.dockerlab.local" >>/etc/hosts
+        echo "10.10.10.14 swarmnode4 swarmnode4.dockerlab.local" >>/etc/hosts
 
       SHELL
 
