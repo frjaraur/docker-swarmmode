@@ -41,18 +41,18 @@ InfoMessage "SWARM MODE ROLE [${SWARMROLE}]"
 case ${SWARMROLE} in
   manager)
     [ ! -f ${TMPSHARED}/manager.token ] && InfoMessage "Initiating Swarm Cluster" \
-    && docker swarm init --advertise-addr ${SWARMIP} --listen-addr eth1 \
+    && docker swarm init --advertise-addr ${SWARMIP} --listen-addr  ${SWARMIP} \
     && docker swarm join-token manager -q > ${TMPSHARED}/manager.token \
     && docker swarm join-token worker -q > ${TMPSHARED}/worker.token \
     && exit
 
     [ -f ${TMPSHARED}/manager.token ] && InfoMessage "Joining Swarm Cluster" \
-    && docker swarm join ${SWARMMASTER_IP}:2377 --advertise-addr ${SWARMIP}  --listen-addr eth1 \
+    && docker swarm join ${SWARMMASTER_IP}:2377 --advertise-addr ${SWARMIP}  --listen-addr  ${SWARMIP} \
     --token $(cat ${TMPSHARED}/manager.token)
   ;;
 
   worker)
-    docker swarm join ${SWARMMASTER_IP}:2377 --advertise-addr ${SWARMIP}  --listen-addr eth1 \
+    docker swarm join ${SWARMMASTER_IP}:2377 --advertise-addr ${SWARMIP}  --listen-addr  ${SWARMIP} \
     --token $(cat ${TMPSHARED}/worker.token)
 
   ;;

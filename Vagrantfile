@@ -80,6 +80,9 @@ Vagrant.configure(2) do |config|
       #   sudo apt-get update -qq
       # SHELL
 
+      config.vm.network "public_network",
+      bridge: ["enp4s0","wlp3s0"],
+      auto_config: false
 
       config.vm.provision "shell", inline: <<-SHELL
         sudo apt-get update -qq && apt-get install -qq chrony && timedatectl set-timezone Europe/Madrid
