@@ -53,6 +53,14 @@ Vagrant.configure(2) do |config|
         v.name = opts[:node_mgmt_name]
         v.customize ["modifyvm", :id, "--memory", opts[:node_mem]]
         v.customize ["modifyvm", :id, "--cpus", opts[:node_cpu]]
+        v.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
+        v.customize ["modifyvm", :id, "--nictype2", "Am79C973"]          
+        v.customize ["modifyvm", :id, "--nictype3", "Am79C973"]          
+        v.customize ["modifyvm", :id, "--nictype4", "Am79C973"]          
+        v.customize ["modifyvm", :id, "--nicpromisc1", "allow-all"]
+        v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+        v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+        v.customize ["modifyvm", :id, "--nicpromisc4", "allow-all"]
       end
 
       # config.vm.network "public_network",
@@ -80,9 +88,14 @@ Vagrant.configure(2) do |config|
       #   sudo apt-get update -qq
       # SHELL
 
+      #config.vm.network "public_network",
+      #bridge: ["enp4s0","wlp3s0"],
+      #auto_config: false
+
       config.vm.network "public_network",
       bridge: ["enp4s0","wlp3s0"],
-      auto_config: false
+      auto_config: true
+
 
       config.vm.provision "shell", inline: <<-SHELL
         sudo apt-get update -qq && apt-get install -qq chrony && timedatectl set-timezone Europe/Madrid
