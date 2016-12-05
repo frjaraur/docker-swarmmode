@@ -40,6 +40,16 @@ boxes = [
 
 swarm_master_ip="10.10.10.11"
 
+engine_version="current"
+
+if ENV['engine_version']
+	engine_version=ENV['engine_version']
+end
+
+
+puts '--------------------------------'
+puts 'Enginge Version: '+engine_version
+puts '--------------------------------'
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
   config.vm.synced_folder "tmp_deploying_stage/", "/tmp_deploying_stage",create:true
@@ -54,9 +64,9 @@ Vagrant.configure(2) do |config|
         v.customize ["modifyvm", :id, "--memory", opts[:node_mem]]
         v.customize ["modifyvm", :id, "--cpus", opts[:node_cpu]]
         v.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
-        v.customize ["modifyvm", :id, "--nictype2", "Am79C973"]          
-        v.customize ["modifyvm", :id, "--nictype3", "Am79C973"]          
-        v.customize ["modifyvm", :id, "--nictype4", "Am79C973"]          
+        v.customize ["modifyvm", :id, "--nictype2", "Am79C973"]
+        v.customize ["modifyvm", :id, "--nictype3", "Am79C973"]
+        v.customize ["modifyvm", :id, "--nictype4", "Am79C973"]
         v.customize ["modifyvm", :id, "--nicpromisc1", "allow-all"]
         v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
         v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
@@ -93,7 +103,7 @@ Vagrant.configure(2) do |config|
       #auto_config: false
 
       config.vm.network "public_network",
-      bridge: ["enp4s0","wlp3s0"],
+      bridge: ["enp4s0","wlp3s0","enp3s0f1","wlp2s0"],
       auto_config: true
 
 
@@ -123,10 +133,10 @@ Vagrant.configure(2) do |config|
       SHELL
 
       config.vm.provision "file", source: "create_swarm.sh", destination: "/home/vagrant/create_swarm.sh"
-      config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ opts[:node_mgmt_ip], opts[:swarm_role], swarm_master_ip ]
+      config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ opts[:node_mgmt_ip], opts[:swarm_role], swarm_master_ip, engine_version ]
 
       config.vm.provision "file", source: "install_compose.sh", destination: "/home/vagrant/install_compose.sh"
-      config.vm.provision :shell, :path => 'install_compose.sh' 
+      config.vm.provision :shell, :path => 'install_compose.sh'
     end
   end
 

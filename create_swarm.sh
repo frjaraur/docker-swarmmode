@@ -5,6 +5,27 @@ SWARMIP=$1
 SWARMROLE=$2
 
 SWARMMASTER_IP=$3
+
+VERSION=$4
+
+DOCKERVERSION=${VERSION:=get}
+
+
+case ${DOCKERVERSION} in
+  current)
+    DOCKERVERSION="get"
+  ;;
+
+  experimental)
+    DOCKERVERSION="experimental"
+  ;;
+
+  testing)
+    DOCKERVERSION="test"
+  ;;
+  
+esac
+
 #SHARED Between Nodes..
 TMPSHARED="/tmp_deploying_stage"
 #Docker Multi Daemon
@@ -31,8 +52,7 @@ then
   #Install Engine (This way, we can reprovision)
   InfoMessage "Installing Docker"
   apt-get install -qq curl \
-  && curl -sSL https://get.docker.com/ | sh \
-  && curl -fsSL https://get.docker.com/gpg | sudo apt-key add - \
+  && curl -sSk https://${DOCKERVERSION}.docker.com | sh \
   && usermod -aG docker vagrant
 fi
 
