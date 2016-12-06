@@ -51,7 +51,7 @@ puts '--------------------------------'
 puts 'Enginge Version: '+engine_version
 puts '--------------------------------'
 Vagrant.configure(2) do |config|
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "ubuntu/xenial64"
   config.vm.synced_folder "tmp_deploying_stage/", "/tmp_deploying_stage",create:true
   config.vm.synced_folder "src/", "/src",create:true
 
@@ -71,6 +71,7 @@ Vagrant.configure(2) do |config|
         v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
         v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
         v.customize ["modifyvm", :id, "--nicpromisc4", "allow-all"]
+        v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       end
 
       # config.vm.network "public_network",
@@ -132,10 +133,10 @@ Vagrant.configure(2) do |config|
 
       SHELL
 
-      config.vm.provision "file", source: "create_swarm.sh", destination: "/home/vagrant/create_swarm.sh"
+      config.vm.provision "file", source: "create_swarm.sh", destination: "/tmp/create_swarm.sh"
       config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ opts[:node_mgmt_ip], opts[:swarm_role], swarm_master_ip, engine_version ]
 
-      config.vm.provision "file", source: "install_compose.sh", destination: "/home/vagrant/install_compose.sh"
+      config.vm.provision "file", source: "install_compose.sh", destination: "/tmp/install_compose.sh"
       config.vm.provision :shell, :path => 'install_compose.sh'
     end
   end

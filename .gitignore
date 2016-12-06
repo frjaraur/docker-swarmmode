@@ -1,3 +1,4 @@
 src
 tmp_deploying_stage
 .vagrant
+ubuntu-xenial-16.04-cloudimg-console.log

@@ -47,13 +47,17 @@ InfoMessage(){
 }
 
 
+USER="vagrant"
+[ $(grep -c "${USER}" /etc/passwd) -ne 1 ] && USER="ubuntu"
+
+
 if ! dpkg -l docker >/dev/null 2>&1
 then
   #Install Engine (This way, we can reprovision)
   InfoMessage "Installing Docker"
   apt-get install -qq curl \
   && curl -sSk https://${DOCKERVERSION}.docker.com | sh \
-  && usermod -aG docker vagrant
+  && usermod -aG docker ${USER}
 fi
 
 #DOCKER_DAEMON="docker -H ${SWARMIP}:2375"
