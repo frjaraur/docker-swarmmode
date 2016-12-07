@@ -49,6 +49,7 @@ end
 
 puts '--------------------------------'
 puts 'Enginge Version: '+engine_version
+puts '.... you can change version setting environment variable "engine_version" to "test", "beta", "current"...'
 puts '--------------------------------'
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/xenial64"
