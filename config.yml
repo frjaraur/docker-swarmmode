@@ -1,0 +1,35 @@
+environment:
+  domain: "dockerlab.local"
+  swarm_masterip: "10.10.10.11"
+  engine_version: "current"
+  # Valid Engine Versions are 'beta', 'test' and 'current'
+  base_box: "ubuntu/xenial64"
+
+boxes:
+- name: "swarmnode1"
+  swarm_role: "manager"
+  mgmt_ip: "10.10.10.11"
+  hostonly_ip: "192.168.56.11"
+  mem: "1524"
+  cpu: "1"
+
+- name: "swarmnode2"
+  swarm_role: "manager"
+  mgmt_ip: "10.10.10.12"
+  hostonly_ip: "192.168.56.12"
+  mem: "1524"
+  cpu: "1"
+
+- name: "swarmnode3"
+  swarm_role: "manager"
+  mgmt_ip: "10.10.10.13"
+  hostonly_ip: "192.168.56.13"
+  mem: "1524"
+  cpu: "1"
+
+- name: "swarmnode4"
+  swarm_role: "worker"
+  mgmt_ip: "10.10.10.14"
+  hostonly_ip: "192.168.56.14"
+  mem: "1524"
+  cpu: "1"
