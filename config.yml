@@ -1,7 +1,7 @@
 environment:
   domain: "dockerlab.local"
   swarm_masterip: "10.10.10.11"
-  engine_version: "current"
+  engine_version: "test"
   # Valid Engine Versions are 'beta', 'test' and 'current'
   base_box: "ubuntu/xenial64"
 

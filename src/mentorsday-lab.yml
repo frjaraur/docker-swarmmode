@@ -1,0 +1,54 @@
+version: "3"
+# A Docker Compose file for configuration of the development environment
+
+services:
+  # load balancer
+  lb:
+    image: hopla/mentorsday-lab:simplestlb
+#    container_name: simplestlb # Do not allow scaling this service
+    environment:
+      - APPLICATION_ALIAS=simplestapp
+      - APPLICATION_PORT=3000
+#    restart: unless-stopped
+    networks:
+      simplestdemo:
+          aliases:
+          - simplestlb
+    ports:
+      - 8080:80
+
+  db:
+    image: hopla/mentorsday-lab:simplestdb
+#    container_name: simplestdb # Don not allow scaling on this service yet ;)
+#    restart: unless-stopped
+    environment:
+        - "POSTGRES_PASSWORD=changeme"
+    networks:
+       simplestdemo:
+        aliases:
+          - simplestdb
+#    expose:
+#      - 5432
+    volumes:
+      - "/tmp/PGDATA:/var/lib/postgresql/data"
+
+  app:
+    image: hopla/mentorsday-lab:simplestapp
+    environment:
+      - dbhost=simplestdb
+      - dbname=demo
+      - dbuser=demo
+      - dbpasswd=d3m0
+#    restart: unless-stopped
+    networks:
+       simplestdemo:
+        aliases:
+          - simplestapp
+#    expose:
+#      - 3000
+    depends_on:
+      - lb
+      - db
+
+networks:
+  simplestdemo:
