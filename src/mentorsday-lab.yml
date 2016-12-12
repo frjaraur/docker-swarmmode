@@ -1,3 +1,5 @@
+# docker stack deploy -c mentorsday-lab.yml lab
+# docker stack services lab
 version: "3"
 # A Docker Compose file for configuration of the development environment
 
