@@ -1,0 +1,50 @@
+# docker stack deploy -c mentorsday-lab.yml lab
+# docker stack services lab
+version: "3"
+
+services:
+  # load balancer
+  lb:
+    image: hopla/mentorsday-lab:simplestlb
+    environment:
+      - APPLICATION_ALIAS=simplestapp
+      - APPLICATION_PORT=3000
+    networks:
+      simplestdemo:
+          aliases:
+          - simplestlb
+    ports:
+      - 8080:80
+
+  db:
+    image: hopla/mentorsday-lab:simplestdb
+    environment:
+        - "POSTGRES_PASSWORD=changeme"
+    networks:
+       simplestdemo:
+        aliases:
+          - simplestdb
+    volumes:
+      - "PGDATA:/var/lib/postgresql/data"
+
+  app:
+    image: hopla/mentorsday-lab:simplestapp
+    environment:
+      - dbhost=simplestdb
+      - dbname=demo
+      - dbuser=demo
+      - dbpasswd=d3m0
+    networks:
+       simplestdemo:
+        aliases:
+          - simplestapp
+    depends_on:
+      - lb
+      - db
+
+networks:
+  simplestdemo:
+
+volumes:
+  PGDATA:
+    driver: local
