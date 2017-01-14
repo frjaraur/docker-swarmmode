@@ -38,7 +38,7 @@ if engine_version == ''
     engine_version=config['environment']['engine_version']
 end
 
-if engine_mode == ''
+if engine_mode == 'default'
     engine_mode=config['environment']['engine_mode']
 end
 
