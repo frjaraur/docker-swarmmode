@@ -51,7 +51,9 @@ fi
 InfoMessage "SWARM MODE ROLE [${SWARMROLE}]"
 
 # Enabling Experimetal Features
-[ "${ENGINE_MODE}" == "true" ] && echo -e "{\n\t\"extperimental\" ; true\n}" > /etc/docker/daemon.json
+[ "${ENGINE_MODE}" == "experimental" ] \
+    && echo "{\"experimental\" : true}" > /etc/docker/daemon.json \
+    && systemctl restart docker
 
 
 
