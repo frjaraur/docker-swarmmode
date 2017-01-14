@@ -8,6 +8,11 @@ SWARMMASTER_IP=$3
 
 DOWNLOAD_URL=$4
 
+ENGINE_MODE=$5 
+
+echo ${ENGINE_MODE}|tr '[A-Z]' '[a-z]'
+
+
 #SHARED Between Nodes..
 TMPSHARED="/tmp_deploying_stage"
 #Docker Multi Daemon
@@ -44,6 +49,12 @@ fi
 
 #DOCKER_DAEMON="docker -H ${SWARMIP}:2375"
 InfoMessage "SWARM MODE ROLE [${SWARMROLE}]"
+
+# Enabling Experimetal Features
+[ "${ENGINE_MODE}" == "true" ] && echo -e "{\n\t\"extperimental\" ; true\n}" > /etc/docker/daemon.json
+
+
+
 case ${SWARMROLE} in
   manager)
     [ ! -f ${TMPSHARED}/manager.token ] && InfoMessage "Initiating Swarm Cluster" \

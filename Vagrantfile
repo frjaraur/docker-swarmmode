@@ -19,11 +19,14 @@ opts = GetoptLong.new(
   [ '--force', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 engine_version=''
+engine_mode='default'
 #
 opts.each do |opt, arg|
     case opt
         when '--engine-version'
               engine_version=arg
+        when '--engine-mode'
+              engine_mode=arg
     end
 end
 
@@ -35,22 +38,9 @@ if engine_version == ''
     engine_version=config['environment']['engine_version']
 end
 
-#case engine_version
-#    when "experimental"
-#        engine_download_url="http://experimental.docker,.com"
-#
-#    when "current", "latest", "stable"
-#        engine_download_url="http://get.docker,.com"
-#
-#    when "test", "testing", "rc"
-#        engine_download_url="http://test.docker,.com"
-#        
-#    else 
-#        #\e[41m#{self}\e[0m
-#        STDERR.puts "Unknown Docker Engine version, please use 'experimental', 'test' or 'stable'".red
-#        exit
-#end
-
+if engine_mode == ''
+    engine_mode=config['environment']['engine_mode']
+end
 
 swarm_master_ip=config['environment']['swarm_masterip']
 
@@ -71,9 +61,9 @@ update_hosts = <<SCRIPT
     echo -e "#{boxes_hostsfile_entries}" |tee -a /etc/hosts
 SCRIPT
 
-puts '--------------------------------'
-puts 'Docker Engine Version: '+engine_version
-puts '--------------------------------'
+puts '-------------------------------------------------------------------'
+puts 'Docker Engine Version: '+engine_version+' (mode: '+engine_mode+')'
+puts '-------------------------------------------------------------------'
 
 Vagrant.configure(2) do |config|
   if Vagrant.has_plugin?("vagrant-proxyconf")
@@ -141,35 +131,10 @@ Vagrant.configure(2) do |config|
         sudo apt-get update -qq && apt-get install -qq chrony && timedatectl set-timezone Europe/Madrid
       SHELL
 
-      # Delete default router for host-only-adapter
-      #  config.vm.provision "shell",
-      #  run: "always",
-      #  inline: "route del default gw 192.168.56.1"
-
-
-      ## INSTALL DOCKER ENGINE --> on script because we can reprovision
-      #config.vm.provision "shell", inline: <<-SHELL
-      #
-      #SHELL
-
-      ## ADD HOSTS
-      # config.vm.provision "shell", inline: <<-SHELL
-      #   echo "127.0.0.1 localhost" >/etc/hosts
-      #   echo "10.10.10.11 swarmnode1 swarmnode1.dockerlab.local" >>/etc/hosts
-      #   echo "10.10.10.12 swarmnode2 swarmnode2.dockerlab.local" >>/etc/hosts
-      #   echo "10.10.10.13 swarmnode3 swarmnode3.dockerlab.local" >>/etc/hosts
-      #   echo "10.10.10.14 swarmnode4 swarmnode4.dockerlab.local" >>/etc/hosts
-      #
-      # SHELL
-
-
       config.vm.provision :shell, :inline => update_hosts
 
-
-
-
       config.vm.provision "file", source: "create_swarm.sh", destination: "/tmp/create_swarm.sh"
-      config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ node['mgmt_ip'], node['swarm_role'], swarm_master_ip, engine_download_url ]
+      config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ node['mgmt_ip'], node['swarm_role'], swarm_master_ip, engine_download_url, engine_mode ]
 
       config.vm.provision "file", source: "install_compose.sh", destination: "/tmp/install_compose.sh"
       config.vm.provision :shell, :path => 'install_compose.sh'
