@@ -6,25 +6,7 @@ SWARMROLE=$2
 
 SWARMMASTER_IP=$3
 
-VERSION=$4
-
-DOCKERVERSION=${VERSION:=get}
-
-
-case ${DOCKERVERSION} in
-  current)
-    DOCKERVERSION="get"
-  ;;
-
-  experimental)
-    DOCKERVERSION="experimental"
-  ;;
-
-  testing)
-    DOCKERVERSION="test"
-  ;;
-  
-esac
+DOWNLOAD_URL=$4
 
 #SHARED Between Nodes..
 TMPSHARED="/tmp_deploying_stage"
@@ -56,7 +38,7 @@ then
   #Install Engine (This way, we can reprovision)
   InfoMessage "Installing Docker"
   apt-get install -qq curl \
-  && curl -sSk https://${DOCKERVERSION}.docker.com | sh \
+  && curl -sSk ${DOWNLOAD_URL} | sh \
   && usermod -aG docker ${USER}
 fi
 

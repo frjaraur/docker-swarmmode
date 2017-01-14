@@ -3,12 +3,54 @@
 
 # Require YAML module
 require 'yaml'
+require 'getoptlong'
+
+class String
+    def black;          "\e[30m#{self}\e[0m" end
+    def red;            "\e[31m#{self}\e[0m" end
+    def cyan;           "\e[36m#{self}\e[0m" end
+end
+
+
+opts = GetoptLong.new(
+  [ '--engine-version', GetoptLong::OPTIONAL_ARGUMENT ],
+  [ '--help', GetoptLong::OPTIONAL_ARGUMENT ],
+  [ '-d', GetoptLong::OPTIONAL_ARGUMENT ],
+  [ '--force', GetoptLong::OPTIONAL_ARGUMENT ]
+)
+engine_version=''
+#
+opts.each do |opt, arg|
+    case opt
+        when '--engine-version'
+              engine_version=arg
+    end
+end
 
 config = YAML.load_file(File.join(File.dirname(__FILE__), 'config.yml'))
 
 base_box=config['environment']['base_box']
 
-engine_version=config['environment']['engine_version']
+if engine_version == ''
+    engine_version=config['environment']['engine_version']
+end
+
+#case engine_version
+#    when "experimental"
+#        engine_download_url="http://experimental.docker,.com"
+#
+#    when "current", "latest", "stable"
+#        engine_download_url="http://get.docker,.com"
+#
+#    when "test", "testing", "rc"
+#        engine_download_url="http://test.docker,.com"
+#        
+#    else 
+#        #\e[41m#{self}\e[0m
+#        STDERR.puts "Unknown Docker Engine version, please use 'experimental', 'test' or 'stable'".red
+#        exit
+#end
+
 
 swarm_master_ip=config['environment']['swarm_masterip']
 
@@ -30,10 +72,31 @@ update_hosts = <<SCRIPT
 SCRIPT
 
 puts '--------------------------------'
-puts 'Enginge Version: '+engine_version
+puts 'Docker Engine Version: '+engine_version
 puts '--------------------------------'
+
 Vagrant.configure(2) do |config|
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    if proxy
+        puts "Using proxy"
+        config.proxy.http = proxy
+        config.proxy.https = proxy
+        config.proxy.no_proxy = "localhost,127.0.0.1"
+    end
+  end
   config.vm.box = base_box
+  case engine_version
+    when "experimental"
+        engine_download_url="https://experimental.docker.com"
+    when "current", "latest", "stable"
+        engine_download_url="https://get.docker.com"
+    when "test", "testing", "rc"
+        engine_download_url="https://test.docker.com"
+    else
+        STDERR.puts "Unknown Docker Engine version, please use 'experimental', 'test' or 'stable'".red
+         exit
+    end
+
   config.vm.synced_folder "tmp_deploying_stage/", "/tmp_deploying_stage",create:true
   config.vm.synced_folder "src/", "/src",create:true
   boxes.each do |node|
@@ -106,7 +169,7 @@ Vagrant.configure(2) do |config|
 
 
       config.vm.provision "file", source: "create_swarm.sh", destination: "/tmp/create_swarm.sh"
-      config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ node['mgmt_ip'], node['swarm_role'], swarm_master_ip, engine_version ]
+      config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ node['mgmt_ip'], node['swarm_role'], swarm_master_ip, engine_download_url ]
 
       config.vm.provision "file", source: "install_compose.sh", destination: "/tmp/install_compose.sh"
       config.vm.provision :shell, :path => 'install_compose.sh'
