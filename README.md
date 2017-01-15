@@ -18,7 +18,9 @@ It defaults to for nodes:
   * swarmnode3 - manager
   * swarmnode4 - worker
 
-4. When you have finnished all your tests, 
+4. Connect to nodes using vagrant as usual (**vagrant ssh swarmnode1**).
+
+5. When you have finnished all your tests, 
 you can execute **make stop** to stop all nodes or **make destroy** to destroy your environment
 (__**it will delete all nodes and temporary space**__).
 
