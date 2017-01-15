@@ -1,9 +1,13 @@
 # docker-swarmmode
-## Quick 4 nodes Docker 1.12 Swarm Mode cluster ##
+## Quick 4 nodes Docker 1.12 Swarm Mode Cluster using Vagrant and Virtualbox##
+
+This repository will create a working swarm mode cluster for quick deploying, demo and testing of your service and applications. 
 
 Basic Usage:
 
 1. Download respoitory
+ 1. Install Vagrant
+ 2. Install Virtualbox
 
 2. Execute **make create** to create a new environment (you can use **make recreate** as well).
 
