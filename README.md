@@ -5,7 +5,7 @@ This repository will create a working swarm mode cluster for quick deploying, de
 
 Basic Usage:
 
-1. Download respoitory
+1. Download or clone this respository
  1. Install Vagrant
  2. Install Virtualbox
 
