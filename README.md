@@ -25,6 +25,12 @@ you can execute **make stop** to stop all nodes or **make destroy** to destroy y
 (__**it will delete all nodes and temporary space**__).
 
 ## Notes ##
+
+* Deployment will create 3 interfaces on everynode
+ * vagrant internal communication (**internal**)
+ * internal docker network with ips configured in **config.yml** (**internal**)
+ * bridged interface for connecting to your network using dhcp (**external**)
+
 * **make recreate** will destroy your environment and temporary space and create a new one.
 
 * **config.yml** will let you configure your environment 
