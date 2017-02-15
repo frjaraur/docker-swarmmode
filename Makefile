@@ -10,16 +10,16 @@ recreate:
 	@make create
 
 stop:
-	@VBoxManage controlvm swarmnode4 acpipowerbutton
-	@VBoxManage controlvm swarmnode3 acpipowerbutton
-	@VBoxManage controlvm swarmnode2 acpipowerbutton
-	@VBoxManage controlvm swarmnode1 acpipowerbutton
+	@VBoxManage controlvm swarmnode4 acpipowerbutton 2>/dev/null || true
+	@VBoxManage controlvm swarmnode3 acpipowerbutton 2>/dev/null || true
+	@VBoxManage controlvm swarmnode2 acpipowerbutton 2>/dev/null || true
+	@VBoxManage controlvm swarmnode1 acpipowerbutton 2>/dev/null || true
 
 start:
-	@VBoxManage startvm swarmnode1 --type headless
-	@VBoxManage startvm swarmnode2 --type headless
-	@VBoxManage startvm swarmnode3 --type headless
-	@VBoxManage startvm swarmnode4 --type headless
+	@VBoxManage startvm swarmnode1 --type headless 2>/dev/null || true
+	@VBoxManage startvm swarmnode2 --type headless 2>/dev/null || true
+	@VBoxManage startvm swarmnode3 --type headless 2>/dev/null || true
+	@VBoxManage startvm swarmnode4 --type headless 2>/dev/null || true
 
 status:
 	@VBoxManage list runningvms

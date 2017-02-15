@@ -33,6 +33,11 @@ puts '--------------------------------'
 puts 'Enginge Version: '+engine_version
 puts '--------------------------------'
 Vagrant.configure(2) do |config|
+  #if Vagrant.has_plugin?("vagrant-proxyconf")
+  #  config.proxy.http     = "http://192.168.207.1:8080/"
+  #  config.proxy.https     = "http://192.168.207.1:8080/"
+  #  config.proxy.no_proxy = "localhost,127.0.0.1,"+domain
+  #end
   config.vm.box = base_box
   config.vm.synced_folder "tmp_deploying_stage/", "/tmp_deploying_stage",create:true
   config.vm.synced_folder "src/", "/src",create:true
