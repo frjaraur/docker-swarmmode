@@ -6,25 +6,12 @@ SWARMROLE=$2
 
 SWARMMASTER_IP=$3
 
-VERSION=$4
+DOWNLOAD_URL=$4
 
-DOCKERVERSION=${VERSION:=get}
+ENGINE_MODE=$5 
 
+echo ${ENGINE_MODE}|tr '[A-Z]' '[a-z]'
 
-case ${DOCKERVERSION} in
-  current)
-    DOCKERVERSION="get"
-  ;;
-
-  experimental)
-    DOCKERVERSION="experimental"
-  ;;
-
-  testing)
-    DOCKERVERSION="test"
-  ;;
-  
-esac
 
 #SHARED Between Nodes..
 TMPSHARED="/tmp_deploying_stage"
@@ -56,12 +43,20 @@ then
   #Install Engine (This way, we can reprovision)
   InfoMessage "Installing Docker"
   apt-get install -qq curl \
-  && curl -sSk https://${DOCKERVERSION}.docker.com | sh \
+  && curl -sSk ${DOWNLOAD_URL} | sh \
   && usermod -aG docker ${USER}
 fi
 
 #DOCKER_DAEMON="docker -H ${SWARMIP}:2375"
 InfoMessage "SWARM MODE ROLE [${SWARMROLE}]"
+
+# Enabling Experimetal Features
+[ "${ENGINE_MODE}" == "experimental" ] \
+    && echo "{\"experimental\" : true}" > /etc/docker/daemon.json \
+    && systemctl restart docker
+
+
+
 case ${SWARMROLE} in
   manager)
     [ ! -f ${TMPSHARED}/manager.token ] && InfoMessage "Initiating Swarm Cluster" \

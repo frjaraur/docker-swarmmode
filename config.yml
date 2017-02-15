@@ -2,8 +2,10 @@ environment:
   domain: "dockerlab.local"
   swarm_masterip: "10.10.10.11"
   engine_version: "test"
-  # Valid Engine Versions are 'beta', 'test' and 'current'
+  engine_mode: "experimental"
+  # Valid Engine Versions are 'experimental', 'test' and 'current'
   base_box: "ubuntu/xenial64"
+  #proxy: "http://your_proxy_goes_here:with_the_port"
 
 boxes:
 - name: "swarmnode1"
