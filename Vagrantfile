@@ -128,7 +128,7 @@ Vagrant.configure(2) do |config|
 
 
       config.vm.provision "shell", inline: <<-SHELL
-        sudo apt-get update -qq && apt-get install -qq chrony && timedatectl set-timezone Europe/Madrid
+        apt-get update -qq && apt-get install -qq chrony && timedatectl set-timezone Europe/Madrid
       SHELL
 
       config.vm.provision :shell, :inline => update_hosts
@@ -138,6 +138,10 @@ Vagrant.configure(2) do |config|
 
       config.vm.provision "file", source: "install_compose.sh", destination: "/tmp/install_compose.sh"
       config.vm.provision :shell, :path => 'install_compose.sh'
+
+      config.vm.provision "file", source: "rexray.config.yml", destination: "/tmp/rexray.config.yml"
+      config.vm.provision :shell, :path => 'install_rexray.sh'
+
     end
   end
 

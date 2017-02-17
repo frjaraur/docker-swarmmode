@@ -1,6 +1,7 @@
 destroy:
 	@vagrant destroy --force
 	@rm -rf tmp_deploying_stage
+	@rm -rf /tmp/rexray/volumes
 
 create:
 	@vagrant up -d

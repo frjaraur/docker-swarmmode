@@ -1,0 +1,15 @@
+rexray:
+    logLevel: warn
+libstorage:
+     host:     tcp://127.0.0.1:7979
+     embedded: true
+     service:  virtualbox
+     server:
+         endpoints:
+             public:
+                 address: tcp://:7979
+         services:
+             virtualbox:
+                 driver: virtualbox
+virtualbox:
+    volumePath: /tmp/rexray/volumes
