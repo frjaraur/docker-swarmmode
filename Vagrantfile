@@ -4,6 +4,8 @@
 # Require YAML module
 require 'yaml'
 require 'getoptlong'
+require 'fileutils'
+require 'shellwords'
 
 class String
     def black;          "\e[30m#{self}\e[0m" end
@@ -59,9 +61,10 @@ boxes = config['boxes']
 
 boxes_hostsfile_entries=""
 
- boxes.each do |box|
-   boxes_hostsfile_entries=boxes_hostsfile_entries+box['mgmt_ip'] + ' ' +  box['name'] + ' ' + box['name']+'.'+domain+'\n'
- end
+
+boxes.each do |box|
+  boxes_hostsfile_entries=boxes_hostsfile_entries+box['mgmt_ip'] + ' ' +  box['name'] + ' ' + box['name']+'.'+domain+'\n'
+end
 
 #puts boxes_hostsfile_entries
 
@@ -73,6 +76,46 @@ SCRIPT
 puts '-------------------------------------------------------------------'
 puts 'Docker Engine Version: '+engine_version+' (mode: '+engine_mode+')'
 puts '-------------------------------------------------------------------'
+
+# Added Rex-Ray
+$rexray_cfg = "/etc/rexray/config.yml"
+$volume_path = "#{File.dirname(__FILE__)}/.vagrant/volumes"
+FileUtils::mkdir_p $volume_path
+#$write_rexray_config_manager = <<SCRIPT
+# 10.0.2.2 is the virtual ip for virtualbox host using vagrant
+$write_rexray_config = <<SCRIPT
+mkdir -p #{File.dirname($rexray_cfg).shellescape}
+cat << EOF > #{$rexray_cfg.shellescape}
+rexray:
+  logLevel: warn
+libstorage:
+  #host:     tcp://127.0.0.1:7979
+  #embedded: true
+  service:  virtualbox
+  server:
+    #endpoints:
+    #  public:
+    #    address: tcp://:7979
+    services:
+      virtualbox:
+        driver: virtualbox
+virtualbox:
+  volumePath: #{$volume_path.shellescape}
+  endpoint: http://10.0.2.2:18083
+EOF
+SCRIPT
+
+#$write_rexray_config_worker = <<SCRIPT
+#mkdir -p #{File.dirname($rexray_cfg).shellescape}
+#cat << EOF > #{$rexray_cfg.shellescape}
+#rexray:
+  #logLevel: warn
+#libstorage:
+  #host:    tcp://#{$swarm_master_ip}:7979
+  #service: virtualbox
+#EOF
+#SCRIPT
+
 
 Vagrant.configure(2) do |config|
   if Vagrant.has_plugin?("vagrant-proxyconf")
@@ -148,8 +191,48 @@ Vagrant.configure(2) do |config|
       config.vm.provision "file", source: "install_compose.sh", destination: "/tmp/install_compose.sh"
       config.vm.provision :shell, :path => 'install_compose.sh'
 
-      config.vm.provision "file", source: "rexray.config.yml", destination: "/tmp/rexray.config.yml"
-      config.vm.provision :shell, :path => 'install_rexray.sh'
+      #config.vm.provision "file", source: "rexray.config.yml", destination: "/tmp/rexray.config.yml"
+      #config.vm.provision :shell, :path => 'install_rexray.sh'
+
+      # write rex-ray config file
+#	if node['swarm_role'] == 'manager'
+		config.vm.provision "shell" do |s|
+       			s.name       = "config rex-ray"
+        		s.inline     = $write_rexray_config
+        		#s.inline     = $write_rexray_config_manager
+      		end
+#	else
+#		config.vm.provision "shell" do |s|
+#       			s.name       = "config rex-ray"
+#        		s.inline     = $write_rexray_config_worker
+#      		end
+#	end
+
+
+      # install rex-ray
+      config.vm.provision "shell", inline: <<-SHELL
+	curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
+	rexray install
+      SHELL
+
+#	config.vm.provision "shell" do |s|
+#		s.name   = "rex-ray install"
+#		s.inline = "curl -sSL https://dl.bintray.com/emccode/rexray/install | sh"
+#	end
+
+      # start rex-ray as a service
+	config.vm.provision "shell" do |s|
+		s.name   = "start rex-ray"
+		s.inline = "sudo rexray start"
+	end
+	
+	config.vm.provision "shell", run: "always" do |s|
+		s.name       = "rex-ray volume map"
+		s.privileged = false
+		s.inline     = "rexray volume ls"
+    	end
+
+
 
     end
   end

@@ -63,11 +63,14 @@ case ${SWARMROLE} in
     && docker swarm init --advertise-addr ${SWARMIP} --listen-addr  ${SWARMIP} \
     && docker swarm join-token manager -q > ${TMPSHARED}/manager.token \
     && docker swarm join-token worker -q > ${TMPSHARED}/worker.token \
+    && touch ${TMPSHARED}/$(hostname).provisioned \
     && exit
 
-    [ -f ${TMPSHARED}/manager.token ] && InfoMessage "Joining Swarm Cluster" \
+    [ -f ${TMPSHARED}/manager.token  -a ! -f ${TMPSHARED}/$(hostname).provisioned ] && InfoMessage "Joining Swarm Cluster" \
     && docker swarm join ${SWARMMASTER_IP}:2377 --advertise-addr ${SWARMIP}  --listen-addr  ${SWARMIP} \
     --token $(cat ${TMPSHARED}/manager.token)
+    
+
   ;;
 
   worker)
