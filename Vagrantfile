@@ -11,6 +11,14 @@ class String
     def cyan;           "\e[36m#{self}\e[0m" end
 end
 
+if ARGV[0] == "up"
+  unless `ps alx | grep [v]boxwebsrv` != ""
+    printf "starting virtualbox web server\n"
+    print `VBoxManage setproperty websrvauthlibrary null && vboxwebsrv --background`
+  end
+end
+
+
 
 opts = GetoptLong.new(
   [ '--engine-version', GetoptLong::OPTIONAL_ARGUMENT ],
@@ -20,6 +28,7 @@ opts = GetoptLong.new(
 )
 engine_version=''
 engine_mode='default'
+proxy = ''
 #
 opts.each do |opt, arg|
     case opt
@@ -67,7 +76,7 @@ puts '-------------------------------------------------------------------'
 
 Vagrant.configure(2) do |config|
   if Vagrant.has_plugin?("vagrant-proxyconf")
-    if proxy
+    if proxy != ''
         puts "Using proxy"
         config.proxy.http = proxy
         config.proxy.https = proxy
