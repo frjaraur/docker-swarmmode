@@ -4,7 +4,7 @@ environment:
   engine_version: "test"
   engine_mode: "experimental"
   # Valid Engine Versions are 'experimental', 'test' and 'current'
-  base_box: "frjaraur/xenial64"
+  base_box: "frjaraur/xenial64:1.3"
   #proxy: "http://your_proxy_goes_here:with_the_port"
 
 boxes:

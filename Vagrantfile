@@ -16,7 +16,7 @@ end
 if ARGV[0] == "up"
   unless `ps alx | grep [v]boxwebsrv` != ""
     printf "starting virtualbox web server\n"
-    print `VBoxManage setproperty websrvauthlibrary null && vboxwebsrv --background`
+    print `VBoxManage setproperty websrvauthlibrary null && vboxwebsrv -H 0.0.0.0 --background`
   end
 end
 
@@ -89,19 +89,16 @@ cat << EOF > #{$rexray_cfg.shellescape}
 rexray:
   logLevel: warn
 libstorage:
-  #host:     tcp://127.0.0.1:7979
-  #embedded: true
-  service:  virtualbox
-  server:
-    #endpoints:
-    #  public:
-    #    address: tcp://:7979
-    services:
-      virtualbox:
-        driver: virtualbox
+  service: virtualbox
+  integration:
+    volume:
+      operations:
+        mount:
+          preempt: true
 virtualbox:
-  volumePath: #{$volume_path.shellescape}
+  volumePath: #{$volume_path}
   endpoint: http://10.0.2.2:18083
+  controllerName: SATA
 EOF
 SCRIPT
 
@@ -191,46 +188,34 @@ Vagrant.configure(2) do |config|
       config.vm.provision "file", source: "install_compose.sh", destination: "/tmp/install_compose.sh"
       config.vm.provision :shell, :path => 'install_compose.sh'
 
-      #config.vm.provision "file", source: "rexray.config.yml", destination: "/tmp/rexray.config.yml"
-      #config.vm.provision :shell, :path => 'install_rexray.sh'
 
-      # write rex-ray config file
-#	if node['swarm_role'] == 'manager'
-		config.vm.provision "shell" do |s|
+		  config.vm.provision "shell" do |s|
        			s.name       = "config rex-ray"
         		s.inline     = $write_rexray_config
-        		#s.inline     = $write_rexray_config_manager
-      		end
-#	else
-#		config.vm.provision "shell" do |s|
-#       			s.name       = "config rex-ray"
-#        		s.inline     = $write_rexray_config_worker
-#      		end
-#	end
-
+      end
 
       # install rex-ray
       config.vm.provision "shell", inline: <<-SHELL
-	curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
-	rexray install
+	     curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
+	     rexray install
       SHELL
 
-#	config.vm.provision "shell" do |s|
-#		s.name   = "rex-ray install"
-#		s.inline = "curl -sSL https://dl.bintray.com/emccode/rexray/install | sh"
-#	end
 
-      # start rex-ray as a service
-	config.vm.provision "shell" do |s|
-		s.name   = "start rex-ray"
-		s.inline = "sudo rexray start"
-	end
-	
-	config.vm.provision "shell", run: "always" do |s|
-		s.name       = "rex-ray volume map"
-		s.privileged = false
-		s.inline     = "rexray volume ls"
-    	end
+      config.vm.provision "shell" do |s|
+        s.name   = "Start rex-ray"
+        s.inline = "sudo systemctl start rexray"
+      end
+
+      config.vm.provision "shell" do |s|
+        s.name   = "Restart Docker Engine"
+        s.inline = "sudo systemctl restart docker"
+      end
+
+#	config.vm.provision "shell", run: "always" do |s|
+#		s.name       = "rex-ray volume map"
+#		s.privileged = false
+#		s.inline     = "rexray volume ls"
+#   	end
 
 
 
