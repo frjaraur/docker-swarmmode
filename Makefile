@@ -23,4 +23,4 @@ start:
 	@VBoxManage startvm swarmnode4 --type headless 2>/dev/null || true
 
 status:
-	@VBoxManage list runningvms
+	@vagrant status
