@@ -146,6 +146,8 @@ Vagrant.configure(2) do |config|
         v.customize ["modifyvm", :id, "--memory", node['mem']]
         v.customize ["modifyvm", :id, "--cpus", node['cpu']]
 
+	v.customize ["modifyvm", :id, "--macaddress1", "auto"]
+
         v.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
         v.customize ["modifyvm", :id, "--nictype2", "Am79C973"]
         v.customize ["modifyvm", :id, "--nictype3", "Am79C973"]
@@ -155,6 +157,7 @@ Vagrant.configure(2) do |config|
         v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
         v.customize ["modifyvm", :id, "--nicpromisc4", "allow-all"]
         v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+	v.customize ["modifyvm", :id, "--macaddress1", "auto"]
 
       end
 
