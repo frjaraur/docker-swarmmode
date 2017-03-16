@@ -6,9 +6,9 @@ SWARMROLE=$2
 
 SWARMMASTER_IP=$3
 
-DOWNLOAD_URL=$4
+#DOWNLOAD_URL=$4
 
-ENGINE_MODE=$5 
+ENGINE_MODE=$4
 
 echo ${ENGINE_MODE}|tr '[A-Z]' '[a-z]'
 
@@ -34,18 +34,18 @@ InfoMessage(){
 }
 
 
-USER="vagrant"
-[ $(grep -c "${USER}" /etc/passwd) -ne 1 ] && USER="ubuntu"
+# USER="vagrant"
+# [ $(grep -c "${USER}" /etc/passwd) -ne 1 ] && USER="ubuntu"
 
 
-if ! dpkg -l docker >/dev/null 2>&1
-then
-  #Install Engine (This way, we can reprovision)
-  InfoMessage "Installing Docker"
-  apt-get install -qq curl \
-  && curl -sSk ${DOWNLOAD_URL} | sh \
-  && usermod -aG docker ${USER}
-fi
+# if ! dpkg -l docker >/dev/null 2>&1
+# then
+#   #Install Engine (This way, we can reprovision)
+#   InfoMessage "Installing Docker"
+#   apt-get install -qq curl \
+#   && curl -sSk ${DOWNLOAD_URL} | sh \
+#   && usermod -aG docker ${USER}
+# fi
 
 #DOCKER_DAEMON="docker -H ${SWARMIP}:2375"
 InfoMessage "SWARM MODE ROLE [${SWARMROLE}]"

@@ -3,7 +3,7 @@
 
 # Require YAML module
 require 'yaml'
-require 'getoptlong'
+# require 'getoptlong'
 require 'fileutils'
 require 'shellwords'
 
@@ -13,33 +13,33 @@ class String
     def cyan;           "\e[36m#{self}\e[0m" end
 end
 
-if ARGV[0] == "up"
-  unless `ps alx | grep [v]boxwebsrv` != ""
-    printf "starting virtualbox web server\n"
-    print `VBoxManage setproperty websrvauthlibrary null && vboxwebsrv -H 0.0.0.0 --background`
-  end
-end
+# if ARGV[0] == "up"
+#   unless `ps alx | grep [v]boxwebsrv` != ""
+#     printf "starting virtualbox web server\n"
+#     print `VBoxManage setproperty websrvauthlibrary null && vboxwebsrv -H 0.0.0.0 --background`
+#   end
+# end
 
 
 
-opts = GetoptLong.new(
-  [ '--engine-version', GetoptLong::OPTIONAL_ARGUMENT ],
-  [ '--help', GetoptLong::OPTIONAL_ARGUMENT ],
-  [ '-d', GetoptLong::OPTIONAL_ARGUMENT ],
-  [ '--force', GetoptLong::OPTIONAL_ARGUMENT ]
-)
+# opts = GetoptLong.new(
+#   [ '--engine-version', GetoptLong::OPTIONAL_ARGUMENT ],
+#   [ '--help', GetoptLong::OPTIONAL_ARGUMENT ],
+#   [ '-d', GetoptLong::OPTIONAL_ARGUMENT ],
+#   [ '--force', GetoptLong::OPTIONAL_ARGUMENT ]
+# )
 engine_version=''
 engine_mode='default'
 proxy = ''
 #
-opts.each do |opt, arg|
-    case opt
-        when '--engine-version'
-              engine_version=arg
-        when '--engine-mode'
-              engine_mode=arg
-    end
-end
+# opts.each do |opt, arg|
+#     case opt
+#         when '--engine-version'
+#               engine_version=arg
+#         when '--engine-mode'
+#               engine_mode=arg
+#     end
+# end
 
 config = YAML.load_file(File.join(File.dirname(__FILE__), 'config.yml'))
 
@@ -61,6 +61,12 @@ boxes = config['boxes']
 
 boxes_hostsfile_entries=""
 
+
+## TLS
+
+tls_passphrase = config['environment']['tls_passphrase']
+
+########
 
 boxes.each do |box|
   boxes_hostsfile_entries=boxes_hostsfile_entries+box['mgmt_ip'] + ' ' +  box['name'] + ' ' + box['name']+'.'+domain+'\n'
@@ -114,6 +120,11 @@ SCRIPT
 #SCRIPT
 
 
+$install_docker_engine = <<SCRIPT
+  curl -sSk https://get.docker.com | sh
+  usermod -aG docker vagrant 2>/dev/null
+SCRIPT
+
 Vagrant.configure(2) do |config|
   if Vagrant.has_plugin?("vagrant-proxyconf")
     if proxy != ''
@@ -146,7 +157,7 @@ Vagrant.configure(2) do |config|
         v.customize ["modifyvm", :id, "--memory", node['mem']]
         v.customize ["modifyvm", :id, "--cpus", node['cpu']]
 
-	v.customize ["modifyvm", :id, "--macaddress1", "auto"]
+	      v.customize ["modifyvm", :id, "--macaddress1", "auto"]
 
         v.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
         v.customize ["modifyvm", :id, "--nictype2", "Am79C973"]
@@ -157,7 +168,7 @@ Vagrant.configure(2) do |config|
         v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
         v.customize ["modifyvm", :id, "--nicpromisc4", "allow-all"]
         v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-	v.customize ["modifyvm", :id, "--macaddress1", "auto"]
+	      
 
       end
 
@@ -180,13 +191,42 @@ Vagrant.configure(2) do |config|
 
 
       config.vm.provision "shell", inline: <<-SHELL
-        apt-get update -qq && apt-get install -qq chrony && timedatectl set-timezone Europe/Madrid
+        apt-get update -qq && apt-get install -qq chrony curl && timedatectl set-timezone Europe/Madrid
       SHELL
 
       config.vm.provision :shell, :inline => update_hosts
 
+      ## Docker Install
+      puts "Download from " + engine_download_url
+
+      config.vm.provision "shell" do |s|
+       			s.name       = "Install Docker Engine from "+engine_download_url
+        		s.inline     = $install_docker_engine
+      end
+
+
+      # config.vm.provision "shell", inline: <<-SHELL
+      #     apt-get install -qq curl \
+      #     && curl -sSk #{$engine_download_url} | sh \
+      #     && usermod -aG docker vagrant 2>/dev/null || true
+      # SHELL
+
+      
+
+      ## Docker Secure Engine with TLS
+      puts "Securing Docker with TLS"
+
+      config.vm.provision "file", source: "create_tls_certs.sh", destination: "/tmp/create_tls_certs.sh"
+      config.vm.provision :shell, :path => 'create_tls_certs.sh' , :args => [ tls_passphrase, node['mgmt_ip'], node['hostonly_ip'], node['name']  ]
+
+
+      ## Create Docker Swarm (Swarm Mode)
+
       config.vm.provision "file", source: "create_swarm.sh", destination: "/tmp/create_swarm.sh"
-      config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ node['mgmt_ip'], node['swarm_role'], swarm_master_ip, engine_download_url, engine_mode ]
+      config.vm.provision :shell, :path => 'create_swarm.sh' , :args => [ node['mgmt_ip'], node['swarm_role'], swarm_master_ip, engine_mode ]
+
+
+      ## Install docker-compose
 
       config.vm.provision "file", source: "install_compose.sh", destination: "/tmp/install_compose.sh"
       config.vm.provision :shell, :path => 'install_compose.sh'
