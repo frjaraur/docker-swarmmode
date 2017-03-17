@@ -45,13 +45,11 @@ config = YAML.load_file(File.join(File.dirname(__FILE__), 'config.yml'))
 
 base_box=config['environment']['base_box']
 
-if engine_version == ''
-    engine_version=config['environment']['engine_version']
-end
+engine_version=config['environment']['engine_version']
 
-if engine_mode == 'default'
-    engine_mode=config['environment']['engine_mode']
-end
+
+
+
 
 swarm_master_ip=config['environment']['swarm_masterip']
 
@@ -62,28 +60,24 @@ boxes = config['boxes']
 boxes_hostsfile_entries=""
 
 
+## EXPERIMENTAL FEATURES
+
+experimental=config['environment']['experimental']
+
+########
+
 ## TLS
 
+tls_enabled = config['environment']['tls_enabled']
 tls_passphrase = config['environment']['tls_passphrase']
 
 ########
 
-boxes.each do |box|
-  boxes_hostsfile_entries=boxes_hostsfile_entries+box['mgmt_ip'] + ' ' +  box['name'] + ' ' + box['name']+'.'+domain+'\n'
-end
+## REXRAY
 
-#puts boxes_hostsfile_entries
+rexray_enabled = config['environment']['rexray_enabled']
 
-update_hosts = <<SCRIPT
-    echo "127.0.0.1 localhost" >/etc/hosts
-    echo -e "#{boxes_hostsfile_entries}" |tee -a /etc/hosts
-SCRIPT
-
-puts '-------------------------------------------------------------------'
-puts 'Docker Engine Version: '+engine_version+' (mode: '+engine_mode+')'
-puts '-------------------------------------------------------------------'
-
-# Added Rex-Ray
+# Configuration 
 $rexray_cfg = "/etc/rexray/config.yml"
 $volume_path = "#{File.dirname(__FILE__)}/.vagrant/volumes"
 FileUtils::mkdir_p $volume_path
@@ -108,27 +102,48 @@ virtualbox:
 EOF
 SCRIPT
 
-#$write_rexray_config_worker = <<SCRIPT
-#mkdir -p #{File.dirname($rexray_cfg).shellescape}
-#cat << EOF > #{$rexray_cfg.shellescape}
-#rexray:
-  #logLevel: warn
-#libstorage:
-  #host:    tcp://#{$swarm_master_ip}:7979
-  #service: virtualbox
-#EOF
-#SCRIPT
+########
 
+boxes.each do |box|
+  boxes_hostsfile_entries=boxes_hostsfile_entries+box['mgmt_ip'] + ' ' +  box['name'] + ' ' + box['name']+'.'+domain+'\n'
+end
+
+#puts boxes_hostsfile_entries
+
+update_hosts = <<SCRIPT
+    echo "127.0.0.1 localhost" >/etc/hosts
+    echo -e "#{boxes_hostsfile_entries}" |tee -a /etc/hosts
+SCRIPT
+
+puts '--------------------------------------------------------------------------------------------'
+
+puts ' Docker SWARM MODE Vagrant Environment'
+
+puts ' Engine Version: '+engine_version
+
+puts " Experimental Features Enabled" if experimental == true
+
+puts " Engine Secured with TLS (reacheable on 2376 port - vagrant host 5556 if available)" if tls_enabled == true
+
+puts " RexRay Enabled" if rexray_enabled == true
+
+puts '--------------------------------------------------------------------------------------------'
 
 $install_docker_engine = <<SCRIPT
-  curl -sSk https://get.docker.com | sh
+  curl -sSk $1 | sh
   usermod -aG docker vagrant 2>/dev/null
 SCRIPT
+
+$enable_experimental_features = <<SCRIPT
+    echo '{"experimental" : true}'> /etc/docker/daemon.json
+    systemctl restart docker
+SCRIPT
+
 
 Vagrant.configure(2) do |config|
   if Vagrant.has_plugin?("vagrant-proxyconf")
     if proxy != ''
-        puts "Using proxy"
+        puts " Using proxy"
         config.proxy.http = proxy
         config.proxy.https = proxy
         config.proxy.no_proxy = "localhost,127.0.0.1"
@@ -185,6 +200,7 @@ Vagrant.configure(2) do |config|
 
       config.vm.network "forwarded_port", guest: 8080, host: 8080, auto_correct: true
 
+
       config.vm.network "public_network",
       bridge: ["enp4s0","wlp3s0","enp3s0f1","wlp2s0"],
       auto_config: true
@@ -197,14 +213,23 @@ Vagrant.configure(2) do |config|
       config.vm.provision :shell, :inline => update_hosts
 
       ## Docker Install
-      puts "Download from " + engine_download_url
+      #puts " Community Engine downloaded from " + engine_download_url
 
       config.vm.provision "shell" do |s|
        			s.name       = "Install Docker Engine from "+engine_download_url
         		s.inline     = $install_docker_engine
+            s.args       = engine_download_url
       end
 
+      if experimental == true
+        #puts " Experimental Features Enabled"
 
+        config.vm.provision "shell" do |s|
+              s.name       = "Experimental Features Enabled on Engine"
+              s.inline     = $enable_experimental_features
+        end
+      end
+    
       # config.vm.provision "shell", inline: <<-SHELL
       #     apt-get install -qq curl \
       #     && curl -sSk #{$engine_download_url} | sh \
@@ -212,14 +237,18 @@ Vagrant.configure(2) do |config|
       # SHELL
 
       
+      if tls_enabled == true
 
-      ## Docker Secure Engine with TLS
-      puts "Securing Docker with TLS"
+        config.vm.network "forwarded_port", guest: 2376, host: 5556, auto_correct: true
 
-      config.vm.provision "file", source: "create_tls_certs.sh", destination: "/tmp/create_tls_certs.sh"
-      config.vm.provision :shell, :path => 'create_tls_certs.sh' , :args => [ tls_passphrase, node['mgmt_ip'], node['hostonly_ip'], node['name']  ]
+        ## Docker Secure Engine with TLS
+        #puts " Engine Secured with TLS (reacheable on 2376 port - vagrant host 5556 if available)"
 
+        config.vm.provision "file", source: "create_tls_certs.sh", destination: "/tmp/create_tls_certs.sh"
+        config.vm.provision :shell, :path => 'create_tls_certs.sh' , :args => [ tls_passphrase, node['mgmt_ip'], node['hostonly_ip'], node['name']  ]
 
+      end
+    
       ## Create Docker Swarm (Swarm Mode)
 
       config.vm.provision "file", source: "create_swarm.sh", destination: "/tmp/create_swarm.sh"
@@ -232,34 +261,36 @@ Vagrant.configure(2) do |config|
       config.vm.provision :shell, :path => 'install_compose.sh'
 
 
-		  config.vm.provision "shell" do |s|
-       			s.name       = "config rex-ray"
-        		s.inline     = $write_rexray_config
+      if rexray_enabled == true
+        config.vm.provision "shell" do |s|
+              s.name       = "config rex-ray"
+              s.inline     = $write_rexray_config
+        end
+
+        # install rex-ray
+        config.vm.provision "shell", inline: <<-SHELL
+        curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
+        rexray install
+        SHELL
+
+
+        config.vm.provision "shell" do |s|
+          s.name   = "Start rex-ray"
+          s.inline = "sudo systemctl start rexray"
+        end
+
+        config.vm.provision "shell" do |s|
+          s.name   = "Restart Docker Engine"
+          s.inline = "sudo systemctl restart docker"
+        end
       end
 
-      # install rex-ray
-      config.vm.provision "shell", inline: <<-SHELL
-	     curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
-	     rexray install
-      SHELL
-
-
-      config.vm.provision "shell" do |s|
-        s.name   = "Start rex-ray"
-        s.inline = "sudo systemctl start rexray"
-      end
-
-      config.vm.provision "shell" do |s|
-        s.name   = "Restart Docker Engine"
-        s.inline = "sudo systemctl restart docker"
-      end
 
 #	config.vm.provision "shell", run: "always" do |s|
 #		s.name       = "rex-ray volume map"
 #		s.privileged = false
 #		s.inline     = "rexray volume ls"
 #   	end
-
 
 
     end

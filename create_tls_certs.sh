@@ -10,12 +10,16 @@ nodename=$4
 
 TMPSHARED="/tmp_deploying_stage"
 
+USERNAME="vagrant"
+
+HOME="/home/${USERNAME}"
+
 ## Generate TLS certs
 
 echo "Enabling TLS on Docker Engines"
 
 mkdir -p /etc/docker/certs.d && chmod 750 /etc/docker/certs.d
-mkdir /root/.docker && chmod 750 /root/.docker
+mkdir ${HOME}/.docker
 
 echo "Certificates Authority"
 
@@ -61,23 +65,27 @@ echo "Certificates for Client"
 	mv /etc/docker/certs.d/server-key.pem /etc/docker/certs.d/key.pem
 	mv /etc/docker/certs.d/server-cert.pem /etc/docker/certs.d/cert.pem
 
-	mv /etc/docker/certs.d/client-key.pem /root/.docker/key.pem
-	mv /etc/docker/certs.d/client-cert.pem /root/.docker/cert.pem
-	cp -p /etc/docker/certs.d/ca.pem /root/.docker/ca.pem
+	mv /etc/docker/certs.d/client-key.pem ${HOME}/.docker/key.pem
+	mv /etc/docker/certs.d/client-cert.pem ${HOME}/.docker/cert.pem
+	cp /etc/docker/certs.d/ca.pem ${HOME}/.docker/ca.pem
 
 ## Configure Docker Engines with Swarm. TLS and KeyValue Store Information
 #echo "DOCKER_TLS_VERIFY=1" >> /etc/default/docker
 #echo "DOCKER_CERT_PATH=\"/etc/docker/certs.d\"" >> /etc/default/docker
 DOCKER_OPTS="-H unix:///var/run/docker.sock -H tcp://0.0.0.0:2376  \
-	--tlsverify  \
-	--tlscacert=/etc/docker/certs.d/ca.pem \
-	--tlscert=/etc/docker/certs.d/cert.pem \
-	--tlskey=/etc/docker/certs.d/key.pem"
+--tlsverify  \
+--tlscacert=/etc/docker/certs.d/ca.pem \
+--tlscert=/etc/docker/certs.d/cert.pem \
+--tlskey=/etc/docker/certs.d/key.pem"
 
 
 cat /lib/systemd/system/docker.service |sed "s|ExecStart=.*|ExecStart=/usr/bin/dockerd ${DOCKER_OPTS}|g" >> /etc/systemd/system/docker.service
 
 cp -p /etc/docker/certs.d/ca.pem /usr/share/ca-certificates/ca.pem
+
+chown -R vagrant:vagrant ${HOME}/.docker && chmod -R 750 ${HOME}/.docker
+
+echo -e "export DOCKER_TLS_VERIFY=1\nexport DOCKER_CERT_PATH=${HOME}/.docker\nexport DOCKER_HOST=0.0.0.0:2376\n" >${HOME}/docker_tls_env.sh
 
 update-ca-certificates
 

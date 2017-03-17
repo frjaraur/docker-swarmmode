@@ -1,12 +1,14 @@
 environment:
   domain: "dockerlab.local"
   swarm_masterip: "10.10.10.11"
-  engine_version: "test"
-  engine_mode: "experimental"
   # Valid Engine Versions are 'experimental', 'test' and 'current'
+  engine_version: "current"
+  experimental: true
   base_box: "frjaraur/xenial64"
   #proxy: "http://your_proxy_goes_here:with_the_port"
+  tls_enabled: true
   tls_passphrase: "changeme"
+  rexray_enabled: true
 
 boxes:
 - name: "swarmnode1"
@@ -16,23 +18,23 @@ boxes:
   mem: "1524"
   cpu: "1"
 
-# - name: "swarmnode2"
-#   swarm_role: "manager"
-#   mgmt_ip: "10.10.10.12"
-#   hostonly_ip: "192.168.56.12"
-#   mem: "1524"
-#   cpu: "1"
+- name: "swarmnode2"
+  swarm_role: "manager"
+  mgmt_ip: "10.10.10.12"
+  hostonly_ip: "192.168.56.12"
+  mem: "1524"
+  cpu: "1"
 
-# - name: "swarmnode3"
-#   swarm_role: "manager"
-#   mgmt_ip: "10.10.10.13"
-#   hostonly_ip: "192.168.56.13"
-#   mem: "1524"
-#   cpu: "1"
+- name: "swarmnode3"
+  swarm_role: "manager"
+  mgmt_ip: "10.10.10.13"
+  hostonly_ip: "192.168.56.13"
+  mem: "1524"
+  cpu: "1"
   
-# - name: "swarmnode4"
-#   swarm_role: "worker"
-#   mgmt_ip: "10.10.10.14"
-#   hostonly_ip: "192.168.56.14"
-#   mem: "1524"
-#   cpu: "1"
+- name: "swarmnode4"
+  swarm_role: "worker"
+  mgmt_ip: "10.10.10.14"
+  hostonly_ip: "192.168.56.14"
+  mem: "1524"
+  cpu: "1"
