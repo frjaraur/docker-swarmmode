@@ -1,6 +1,4 @@
-# docker stack deploy -c mentorsday-lab.yml lab
-# docker stack services lab
-version: "3"
+version: "3.1"
 
 services:
   # load balancer
@@ -18,12 +16,16 @@ services:
 
   db:
     image: hopla/mentorsday-lab:simplestdb
+    secrets:
+      - source: "postgres"
+        target: "postgres"
+        uid: "0"
+        gid: "0"
+        mode: 0444
     environment:
-        - "POSTGRES_PASSWORD=changeme"
+        - "POSTGRES_PASSWORD_FILE=/run/secrets/postgres"
     networks:
        simplestdemo:
-        aliases:
-          - simplestdb
     volumes:
       - "PGDATA:/var/lib/postgresql/data"
 
@@ -48,3 +50,8 @@ networks:
 volumes:
   PGDATA:
     driver: local
+
+secrets:
+  postgres:
+    external:
+      name: "simplestdemo_postgres"
