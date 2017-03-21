@@ -13,12 +13,12 @@ class String
     def cyan;           "\e[36m#{self}\e[0m" end
 end
 
-# if ARGV[0] == "up"
-#   unless `ps alx | grep [v]boxwebsrv` != ""
-#     printf "starting virtualbox web server\n"
-#     print `VBoxManage setproperty websrvauthlibrary null && vboxwebsrv -H 0.0.0.0 --background`
-#   end
-# end
+ if ARGV[0] == "up"
+   unless `ps alx | grep [v]boxwebsrv` != ""
+     printf "starting virtualbox web server\n"
+     print `VBoxManage setproperty websrvauthlibrary null && vboxwebsrv -H 0.0.0.0 --background`
+   end
+ end
 
 
 
