@@ -199,6 +199,9 @@ Vagrant.configure(2) do |config|
 
 
       config.vm.network "forwarded_port", guest: 8080, host: 8080, auto_correct: true
+      config.vm.network "forwarded_port", guest: 8081, host: 8081, auto_correct: true
+      config.vm.network "forwarded_port", guest: 8082, host: 8082, auto_correct: true
+      config.vm.network "forwarded_port", guest: 8083, host: 8083, auto_correct: true
 
 
       config.vm.network "public_network",
