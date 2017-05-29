@@ -1,0 +1,106 @@
+version: "3"
+# A Docker Compose file for configuration of the development environment
+
+services:
+  # Demo Environment
+  demo:
+    image: registry.gitlab.com/codegazers/docker-pg-demo:frontend
+    command: start
+#    environment:
+#      - DOCKER_HOST=192.168.1.135
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+       demo:
+    depends_on:
+      - lb
+    ports:
+      - 8080:80
+
+  # Load Balancer
+  lb:
+    image: registry.gitlab.com/codegazers/docker-pg-demo:simplestlb
+    environment:
+      - APPLICATION_ALIAS=app
+      - APPLICATION_PORT=3000
+    networks:
+      demo:
+          aliases:
+          - lb
+  #  ports:
+  #     - 8080:80
+
+  # Application
+  app:
+    image: registry.gitlab.com/codegazers/docker-pg-demo:simplestapp
+    environment:
+      - dbhost=dbpool
+      - dbname=demo
+      - dbuser=demo
+      - dbpasswd=demo
+      - dbpool=true
+    networks:
+       demo:
+        aliases:
+          - app
+    depends_on:
+      - lb
+      - dbpool
+
+  # Database Master
+  dbmaster:
+    image: registry.gitlab.com/codegazers/docker-pg-demo:docker-pg
+    command: master
+    environment:
+        - "MAXREPLICAS=10"
+    networks:
+       demo:
+        aliases:
+          - dbmaster
+    depends_on:
+      - lb
+    volumes:
+      - dockerpgPGDATA:/PGDATA
+
+  # Database Slave
+  dbslave:
+    image: registry.gitlab.com/codegazers/docker-pg-demo:docker-pg
+    command: slave
+    environment:
+        - "PGPOOLMASTER=dbmaster"
+    networks:
+       demo:
+    depends_on:
+      - dbmaster
+    volumes:
+      - /PGDATA
+
+  # Database Pool
+  dbpool:
+    image: registry.gitlab.com/codegazers/docker-pg-demo:docker-pg
+    command: pgpool
+    environment:
+        - "PGPOOLMASTER=dbmaster"
+        #- "DEBUG=true"
+    networks:
+       demo:
+        aliases:
+          - dbpool
+    depends_on:
+      - dbmaster
+      - dbslave
+    ports:
+      - 5432:5432
+
+networks:
+  demo:
+
+volumes:
+  dockerpgPGDATA:
+     driver: rexray
+     driver_opts:
+         size: 1
+

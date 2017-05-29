@@ -1,0 +1,21 @@
+version: "3.1"
+
+services:
+  # local registry for http://localhost:5000 images
+  # Use  curl http://localhost:5000/v2/_catalog on any node to query catalog (remember your REGISTRY volume)
+  # To list images related to docker-pg-demo, use curl http://localhost:5000/v2/docker-pg-demo/tags/list
+  # and this will show you something like
+  #  {"name":"docker-pg-demo","tags":["docker-pg","simplestlb","simplestapp","frontend"]}
+
+  registry:
+    image: registry
+    ports:
+      - 5000:5000
+    volumes:
+      - "REGISTRY:/var/lib/registry"
+volumes:
+  REGISTRY:
+     driver: rexray
+     driver_opts:
+         size: 1
+
