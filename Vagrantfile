@@ -141,6 +141,7 @@ SCRIPT
 
 
 Vagrant.configure(2) do |config|
+  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
   if Vagrant.has_plugin?("vagrant-proxyconf")
     if proxy != ''
         puts " Using proxy"
@@ -168,6 +169,7 @@ Vagrant.configure(2) do |config|
     config.vm.define node['name'] do |config|
       config.vm.hostname = node['name']
       config.vm.provider "virtualbox" do |v|
+        v.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]        
         v.name = node['name']
         v.customize ["modifyvm", :id, "--memory", node['mem']]
         v.customize ["modifyvm", :id, "--cpus", node['cpu']]
@@ -272,7 +274,7 @@ Vagrant.configure(2) do |config|
 
         # install rex-ray
         config.vm.provision "shell", inline: <<-SHELL
-        curl -sSL https://dl.bintray.com/emccode/rexray/install | sh
+        curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.9.1
         rexray install
         SHELL
 

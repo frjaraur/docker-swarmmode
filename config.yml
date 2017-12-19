@@ -2,7 +2,7 @@ environment:
   domain: "dockerlab.local"
   swarm_masterip: "10.10.10.11"
   # Valid Engine Versions are 'experimental', 'test' and 'current'
-  engine_version: "current"
+  engine_version: "test"
   experimental: true
   base_box: "frjaraur/xenial64"
   #proxy: "http://your_proxy_goes_here:with_the_port"
