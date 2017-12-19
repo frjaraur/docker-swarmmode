@@ -130,7 +130,21 @@ puts " RexRay Enabled" if rexray_enabled == true
 puts '--------------------------------------------------------------------------------------------'
 
 $install_docker_engine = <<SCRIPT
-  curl -sSk $1 | sh
+  #curl -sSk $1 | sh
+  DEBIAN_FRONTEND=noninteractive apt-get remove -qq docker docker-engine docker.io
+  DEBIAN_FRONTEND=noninteractive apt-get update -qq
+  DEBIAN_FRONTEND=noninteractive apt-get install -qq \
+  apt-transport-https \
+  ca-certificates \
+  curl \
+  software-properties-common
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | DEBIAN_FRONTEND=noninteractive apt-key add -
+  add-apt-repository \
+  "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) \
+  stable"
+  DEBIAN_FRONTEND=noninteractive apt-get -qq update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y $1
   usermod -aG docker vagrant 2>/dev/null
 SCRIPT
 
@@ -151,17 +165,27 @@ Vagrant.configure(2) do |config|
     end
   end
   config.vm.box = base_box
+  # case engine_version
+  #   when "experimental"
+  #       engine_download_url="https://experimental.docker.com"
+  #   when "current", "latest", "stable"
+  #       engine_download_url="https://get.docker.com"
+  #   when "test", "testing", "rc"
+  #       engine_download_url="https://test.docker.com"
+  #   else
+  #       STDERR.puts "Unknown Docker Engine version, please use 'experimental', 'test' or 'stable'".red
+  #        exit
+  #   end
+
   case engine_version
-    when "experimental"
-        engine_download_url="https://experimental.docker.com"
-    when "current", "latest", "stable"
-        engine_download_url="https://get.docker.com"
-    when "test", "testing", "rc"
-        engine_download_url="https://test.docker.com"
-    else
-        STDERR.puts "Unknown Docker Engine version, please use 'experimental', 'test' or 'stable'".red
-         exit
-    end
+  when "latest"
+      engine_package="docker-ce"
+  else
+      engine_package="docker-ce="+engine_version
+  end
+
+  text= "Using engine version "+engine_version
+  puts text.red
 
   config.vm.synced_folder "tmp_deploying_stage/", "/tmp_deploying_stage",create:true
   config.vm.synced_folder "src/", "/src",create:true
@@ -221,9 +245,9 @@ Vagrant.configure(2) do |config|
       #puts " Community Engine downloaded from " + engine_download_url
 
       config.vm.provision "shell" do |s|
-       			s.name       = "Install Docker Engine from "+engine_download_url
+       			s.name       = "Install Docker Engine version "+engine_version
         		s.inline     = $install_docker_engine
-            s.args       = engine_download_url
+            s.args       = engine_package
       end
 
       if experimental == true
