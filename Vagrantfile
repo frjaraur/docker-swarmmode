@@ -44,6 +44,7 @@ proxy = ''
 config = YAML.load_file(File.join(File.dirname(__FILE__), 'config.yml'))
 
 base_box=config['environment']['base_box']
+base_box_version=config['environment']['base_box_version']
 
 engine_version=config['environment']['engine_version']
 
@@ -117,7 +118,7 @@ SCRIPT
 
 puts '--------------------------------------------------------------------------------------------'
 
-puts ' Docker SWARM MODE Vagrant Environment'
+puts ' Docker SWARM MODE Vagrant Environment'.cyan
 
 puts ' Engine Version: '+engine_version
 
@@ -164,9 +165,12 @@ Vagrant.configure(2) do |config|
         config.proxy.no_proxy = "localhost,127.0.0.1"
     end
   end
-#  config.vm.box = base_box
-  config.vm.box = "frjaraur/xenial64"
-  config.vm.box_version = "1.2"
+  config.vm.box = base_box
+  if base_box_version != ''
+  	text="Using "+base_box+" version "+base_box_version
+	puts text.red
+  	config.vm.box_version = base_box_version
+  end
   # case engine_version
   #   when "experimental"
   #       engine_download_url="https://experimental.docker.com"
@@ -301,7 +305,7 @@ Vagrant.configure(2) do |config|
         # install rex-ray
         config.vm.provision "shell", inline: <<-SHELL
         #curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.9.1
-        curl -sSL curl -sSL https://rexray.io/install | sh
+        curl -sSL https://rexray.io/install | sh
         rexray install
         SHELL
 
