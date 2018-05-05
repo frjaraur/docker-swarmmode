@@ -164,7 +164,9 @@ Vagrant.configure(2) do |config|
         config.proxy.no_proxy = "localhost,127.0.0.1"
     end
   end
-  config.vm.box = base_box
+#  config.vm.box = base_box
+  config.vm.box = "frjaraur/xenial64"
+  config.vm.box_version = "1.2"
   # case engine_version
   #   when "experimental"
   #       engine_download_url="https://experimental.docker.com"
@@ -298,7 +300,8 @@ Vagrant.configure(2) do |config|
 
         # install rex-ray
         config.vm.provision "shell", inline: <<-SHELL
-        curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.9.1
+        #curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.9.1
+        curl -sSL curl -sSL https://rexray.io/install | sh
         rexray install
         SHELL
 
