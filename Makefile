@@ -2,7 +2,7 @@ destroy:
 	@vagrant destroy --force || true
 	@rm -rf tmp_deploying_stage || true
 	@rm -rf /tmp/rexray/volumes || true
-
+	@rm -rf *.vdi
 create:
 	@vagrant up -d
 

@@ -1,14 +1,24 @@
 environment:
   domain: "dockerlab.local"
   swarm_masterip: "10.10.10.11"
-  engine_version: "17.09.1~ce-0~ubuntu"
+  #engine_version: "18.04.0~ce~3-0~ubuntu"
+  engine_version: "latest"
   experimental: true
   base_box: "frjaraur/xenial64"
   base_box_version: "1.2"
   #proxy: "http://your_proxy_goes_here:with_the_port"
-  tls_enabled: true
+  tls_enabled: false
   tls_passphrase: "changeme"
-  rexray_enabled: true
+ 
+storage:
+ rexray_enabled: false
+ minio_enabled: true
+ minio_server: "swarm1"
+ minio_access_key: "changeme"
+ minio_secret_key: "changeme"
+ nfs_enabled: true
+ nfs_server: "swarm1"
+ shared_mount: "/data"
 
 boxes:
 - name: "swarm1"

@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+VAGRANT_ROOT = File.dirname(File.expand_path(__FILE__))
+
 # Require YAML module
 require 'yaml'
 # require 'getoptlong'
@@ -74,11 +76,55 @@ tls_passphrase = config['environment']['tls_passphrase']
 
 ########
 
-## REXRAY
+## STORAGE
 
-rexray_enabled = config['environment']['rexray_enabled']
+rexray_enabled = config['storage']['rexray_enabled']
+minio_enabled = config['storage']['minio_enabled']
+nfs_enabled = config['storage']['nfs_enabled']
 
-# Configuration 
+shared_mount=config['storage']['shared_mount']
+
+# NFS
+nfs_server=config['storage']['nfs_server']
+$configure_nfs_server = <<SCRIPT
+  apt-get install -qq nfs-kernel-server nfs-common
+  [ $(grep -c "#{shared_mount}" /etc/exports) -eq 0 ] && echo "#{shared_mount} *(rw,sync,no_subtree_check)" >> /etc/exports
+  exportfs -a
+SCRIPT
+
+$configure_nfs_client_mount = <<SCRIPT
+  apt-get install -qq nfs-common
+  mount -t nfs #{nfs_server}:#{shared_mount} /mnt
+SCRIPT
+
+
+# Minio
+if minio_enabled == true 
+  minio_access_key = config['storage']['minio_access_key']
+  minio_secret_key = config['storage']['minio_secret_key']
+  minio_server = config['storage']['minio_server']
+end
+
+$prepare_disk = <<SCRIPT
+ mkdir -p #{shared_mount}
+ mkfs.xfs -f /dev/sdb
+ mount /dev/sdb #{shared_mount}
+ chmod 777  #{shared_mount}
+ [ $(grep -c /dev/sdb /etc/fstab) -eq 0 ] && echo "/dev/sdb #{shared_mount} xfs defaults 0 1" >> /etc/fstab
+SCRIPT
+
+
+$start_minion_containers = <<SCRIPT
+ docker run --name minio -d \
+ -e MINIO_ACCESS_KEY=#{minio_access_key} \
+ -e MINIO_SECRET_KEY=#{minio_secret_key} \
+ -v /mnt/data:/data \
+ --net=host \
+ minio/minio server /data
+SCRIPT
+
+
+# Rexray
 $rexray_cfg = "/etc/rexray/config.yml"
 $volume_path = "#{File.dirname(__FILE__)}/.vagrant/volumes"
 FileUtils::mkdir_p $volume_path
@@ -88,7 +134,7 @@ $write_rexray_config = <<SCRIPT
 mkdir -p #{File.dirname($rexray_cfg).shellescape}
 cat << EOF > #{$rexray_cfg.shellescape}
 rexray:
-  logLevel: warn
+  logLevel: debug
 libstorage:
   service: virtualbox
   integration:
@@ -102,6 +148,7 @@ virtualbox:
   controllerName: SATA
 EOF
 SCRIPT
+
 
 ########
 
@@ -215,7 +262,16 @@ Vagrant.configure(2) do |config|
         v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
         v.customize ["modifyvm", :id, "--nicpromisc4", "allow-all"]
         v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-	      
+        
+        if minio_enabled == true or nfs_enabled == true
+          if minio_server == node['name'] or nfs_server == node['name']         
+            data_disk_file = File.join(VAGRANT_ROOT, node['name'] + '-data.vdi')
+              unless File.exist?(data_disk_file)
+                v.customize ['createhd', '--filename', data_disk_file, '--size', 50 * 1024]
+              end
+              v.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', data_disk_file]
+          end
+        end  
 
       end
 
@@ -240,12 +296,24 @@ Vagrant.configure(2) do |config|
       bridge: ["enp4s0","wlp3s0","enp3s0f1","wlp2s0"],
       auto_config: true
 
-
       config.vm.provision "shell", inline: <<-SHELL
         apt-get update -qq && apt-get install -qq chrony curl && timedatectl set-timezone Europe/Madrid
       SHELL
 
       config.vm.provision :shell, :inline => update_hosts
+
+      if minio_enabled == true or nfs_enabled == true
+        if minio_server == node['name'] or nfs_server == node['name']        
+          config.vm.provision :shell, :inline => $prepare_disk
+        end
+      end
+
+      if nfs_enabled == true 
+        if nfs_server == node['name']
+          config.vm.provision :shell, :inline => $configure_nfs_server
+        end
+        config.vm.provision :shell, :inline => $configure_nfs_client_mount
+      end
 
       ## Docker Install
       #puts " Community Engine downloaded from " + engine_download_url
@@ -295,7 +363,6 @@ Vagrant.configure(2) do |config|
       config.vm.provision "file", source: "install_compose.sh", destination: "/tmp/install_compose.sh"
       config.vm.provision :shell, :path => 'install_compose.sh'
 
-
       if rexray_enabled == true
         config.vm.provision "shell" do |s|
               s.name       = "config rex-ray"
@@ -304,11 +371,9 @@ Vagrant.configure(2) do |config|
 
         # install rex-ray
         config.vm.provision "shell", inline: <<-SHELL
-        #curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -s -- stable 0.9.1
-        curl -sSL https://rexray.io/install | sh
+        curl -sSL https://rexray.io/install | sh -s -- stable 0.9.1
         rexray install
         SHELL
-
 
         config.vm.provision "shell" do |s|
           s.name   = "Start rex-ray"
@@ -319,16 +384,12 @@ Vagrant.configure(2) do |config|
           s.name   = "Restart Docker Engine"
           s.inline = "sudo systemctl restart docker"
         end
+
       end
 
-
-#	config.vm.provision "shell", run: "always" do |s|
-#		s.name       = "rex-ray volume map"
-#		s.privileged = false
-#		s.inline     = "rexray volume ls"
-#   	end
-
-
+      # if minio_enabled == true and minio_server == node['name']         
+      #   config.vm.provision :shell, :inline => start_minion_containers
+      # end
     end
   end
 
