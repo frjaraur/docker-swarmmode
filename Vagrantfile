@@ -371,7 +371,8 @@ Vagrant.configure(2) do |config|
 
         # install rex-ray
         config.vm.provision "shell", inline: <<-SHELL
-        curl -sSL https://rexray.io/install | sh -s -- stable 0.9.1
+        #curl -sSL https://rexray.io/install | sh -s -- stable 0.9.1 # For specific version install
+        curl -sSL https://rexray.io/install | sh 
         rexray install
         SHELL
 
