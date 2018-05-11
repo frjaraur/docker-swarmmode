@@ -29,14 +29,14 @@ boxes:
   cpu: "1"
 
 - name: "swarm2"
-  swarm_role: "manager"
+  swarm_role: "worker"
   mgmt_ip: "10.10.10.12"
   hostonly_ip: "192.168.56.12"
   mem: "1524"
   cpu: "1"
 
 - name: "swarm3"
-  swarm_role: "manager"
+  swarm_role: "worker"
   mgmt_ip: "10.10.10.13"
   hostonly_ip: "192.168.56.13"
   mem: "1524"
