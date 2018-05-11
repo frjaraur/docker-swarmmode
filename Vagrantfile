@@ -293,7 +293,7 @@ Vagrant.configure(2) do |config|
 
 
       config.vm.network "public_network",
-      bridge: ["enp4s0","wlp3s0","enp3s0f1","wlp2s0"],
+      bridge: ["eth0","enp4s0","wlp3s0","enp3s0f1","wlp2s0"],
       auto_config: true
 
       config.vm.provision "shell", inline: <<-SHELL

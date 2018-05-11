@@ -21,6 +21,7 @@ stop:
 	@VBoxManage controlvm swarm1 acpipowerbutton 2>/dev/null || true
 
 start:
+	[ `ps -ef | grep -c vboxwebsrv ` -ne 1 ] && VBoxManage setproperty websrvauthlibrary null && vboxwebsrv -H 0.0.0.0 --background
 	@VBoxManage startvm swarm1 --type headless 2>/dev/null || true
 	@VBoxManage startvm swarm2 --type headless 2>/dev/null || true
 	@VBoxManage startvm swarm3 --type headless 2>/dev/null || true
