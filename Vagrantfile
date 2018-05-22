@@ -250,9 +250,7 @@ Vagrant.configure(2) do |config|
         v.name = node['name']
         v.customize ["modifyvm", :id, "--memory", node['mem']]
         v.customize ["modifyvm", :id, "--cpus", node['cpu']]
-
-	      v.customize ["modifyvm", :id, "--macaddress1", "auto"]
-
+        v.customize ["modifyvm", :id, "--macaddress1", "auto"]
         v.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
         v.customize ["modifyvm", :id, "--nictype2", "Am79C973"]
         v.customize ["modifyvm", :id, "--nictype3", "Am79C973"]
@@ -297,7 +295,7 @@ Vagrant.configure(2) do |config|
       auto_config: true
 
       config.vm.provision "shell", inline: <<-SHELL
-        apt-get update -qq && apt-get install -qq chrony curl && timedatectl set-timezone Europe/Madrid
+        apt-get update -qq && apt-get install -qq ntp curl && timedatectl set-timezone Europe/Madrid
       SHELL
 
       config.vm.provision :shell, :inline => update_hosts

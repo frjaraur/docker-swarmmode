@@ -5,18 +5,18 @@ environment:
   engine_version: "latest"
   experimental: true
   base_box: "frjaraur/xenial64"
-  base_box_version: "1.3"
+  base_box_version: "1.4"
   #proxy: "http://your_proxy_goes_here:with_the_port"
   tls_enabled: false
   tls_passphrase: "changeme"
  
 storage:
- rexray_enabled: true
- minio_enabled: false
+ rexray_enabled: false
+ minio_enabled: true
  minio_server: "swarm1"
  minio_access_key: "changeme"
  minio_secret_key: "changeme"
- nfs_enabled: true
+ nfs_enabled: false
  nfs_server: "swarm1"
  shared_mount: "/data"
 
